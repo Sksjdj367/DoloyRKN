@@ -28,7 +28,6 @@ struct NetfilterContext
 
 [[nodiscard]]
 bool fillPacketInfo(NetfilterPacketInfo* packetInfo, nfq_data* nfad);
-bool fillPacket(Net::Packet* packet, NetfilterPacketInfo* packetInfo);
 
 constexpr int CustomPacketMark = 187;
 constexpr int OriginalQueuedPacketMark = 136;

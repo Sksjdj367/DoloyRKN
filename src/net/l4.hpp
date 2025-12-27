@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "packet/l3.hpp"
+#include "net/l3.hpp"
 
 namespace Net
 {

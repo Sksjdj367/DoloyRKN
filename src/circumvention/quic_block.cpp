@@ -2,7 +2,7 @@
 
 #include "circumvention/quic_block.hpp"
 
-#include "packet/pkt.hpp"
+#include "net/pkt.hpp"
 #include "core/connection.hpp"
 
 namespace Circumvention

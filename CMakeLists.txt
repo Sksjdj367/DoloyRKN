@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 file(GLOB_RECURSE INIT_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/init/*)
 file(GLOB_RECURSE CORE_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/core/*.cpp)
-file(GLOB_RECURSE PACKET_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/packet/*.cpp)
+file(GLOB_RECURSE PACKET_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/net/*.cpp)
 file(GLOB_RECURSE CIRCUMVENTION_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/circumvention/*.cpp)
 file(GLOB_RECURSE CLI_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/cli/*.cpp)
 file(GLOB_RECURSE UTIL_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/util/*.cpp)
@@ -49,7 +49,7 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     IMPORTED_IMPLIB "${CMAKE_CURRENT_SOURCE_DIR}/third_party/WinDivert/lib/WinDivert.lib"
     IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/third_party/WinDivert/lib/WinDivert.dll")
 
-    target_link_libraries(${PROJECT_NAME} PRIVATE WinDivert)
+    target_link_libraries(${PROJECT_NAME} PRIVATE WinDivert ws2_32)
     target_link_options(${PROJECT_NAME} PRIVATE -static)
 
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD

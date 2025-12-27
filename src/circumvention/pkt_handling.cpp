@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 #include "util/log.hpp"
-#include "packet/pkt.hpp"
+#include "net/pkt.hpp"
 #include "core/connection.hpp"
 #include "circumvention/fake_packet.hpp"
 #include "circumvention/quic_block.hpp"

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "core/connection.hpp"
-#include "packet/pkt.hpp"
+#include "net/pkt.hpp"
 
 namespace Circumvention
 {

@@ -11,7 +11,8 @@
 #include "cli/params.hpp"
 #include "core/connection.hpp"
 #include "platform/linux/netfilter_util.hpp"
-#include "packet/pkt.hpp"
+#include "net/pkt.hpp"
+#include "net/parse_raw_packet.hpp"
 
 #include "platform/linux/connection.hpp"
 
@@ -85,7 +86,7 @@ int cb(struct nfq_q_handle* gh, struct nfgenmsg* nfmsg, struct nfq_data* nfad, v
         return -1;
     }
 
-    if (!fillPacket(&packet, &packetInfo))
+    if (!Net::parseRawPacket(packetInfo.data, packetInfo.data_len, &packet))
     {
         err("Failed to properly fill packet from packet info\n");
         return -1;

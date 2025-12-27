@@ -18,32 +18,24 @@ DWORD enableANSIColors()
 {
     auto hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
     if (hStdout == INVALID_HANDLE_VALUE)
-    {
         return GetLastError();
-    }
 
-    DWORD dwMode = 0;
+    DWORD dwMode{};
     if (!GetConsoleMode(hStdout, &dwMode))
-    {
         return GetLastError();
-    }
 
     dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
     if (!SetConsoleMode(hStdout, dwMode))
-    {
         return GetLastError();
-    }
 
     return 0;
 }
 
 int Launcher::run()
 {
-    auto r = enableANSIColors();
-    if (r)
-    {
-        err("Failed to enable ANSI colors support (err=%d)\n", r);
-    }
+    auto res = enableANSIColors();
+    if (res)
+        err("Failed to enable ANSI colors support (err=%d)\n", res);
 
     return Core::Launcher::run();
 }

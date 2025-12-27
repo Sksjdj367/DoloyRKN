@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "core/connection.hpp"
-#include "packet/pkt.hpp"
-#include "packet/l3.hpp"
-#include "packet/l4.hpp"
+#include "net/pkt.hpp"
+#include "net/l3.hpp"
+#include "net/l4.hpp"
 
 #include "circumvention/fake_packet.hpp"
 
