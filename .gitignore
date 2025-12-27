@@ -1,1 +1,7 @@
 build/
+build-linux/
+build-windows/
+
+.clang-format
+.clang-tidy
+.vscode/
