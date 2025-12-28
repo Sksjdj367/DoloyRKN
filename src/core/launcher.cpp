@@ -10,7 +10,7 @@
 #include "platform/launcher.hpp"
 #include "platform/release.hpp"
 #include "cli/parsing.hpp"
-#include "net/pkt.hpp"
+#include "net/packet.hpp"
 #include "circumvention/pkt_handling.hpp"
 
 #include "core/launcher.hpp"

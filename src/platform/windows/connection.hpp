@@ -7,7 +7,7 @@
 
 #include "cli/params.hpp"
 #include "core/connection.hpp"
-#include "net/pkt.hpp"
+#include "net/packet.hpp"
 
 namespace Platform
 {

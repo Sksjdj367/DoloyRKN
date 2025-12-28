@@ -5,11 +5,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "net/byte_swap.hpp"
 #include "net/l3.hpp"
 
 namespace Net
 {
-enum class TRANSPORT_PROTOCOLS
+enum class TransportProtocol : uint8_t
 {
     TCP = 6,
     UDP = 17,
@@ -26,6 +27,11 @@ struct TCPHdr
     uint16_t window;
     uint16_t checksum;
     uint16_t urg_ptr;
+
+    uint8_t getDataOffset()
+    {
+        return NetToHostShort(flags) >> 12;
+    }
 };
 #pragma pack(pop)
 
@@ -38,19 +44,4 @@ struct UDPHdr
     uint16_t checksum;
 };
 #pragma pack(pop)
-
-class TransportHdr
-{
-  public:
-    TransportHdr(uint8_t* buf, size_t buf_len, network_hdr* net_hdr);
-    ~TransportHdr();
-
-    TCPHdr* getTCPHdr() const;
-    UDPHdr* getUDPHdr() const;
-
-  private:
-    void* buf;
-    size_t buf_len;
-    enum TRANSPORT_PROTOCOLS type;
-};
 } // namespace Net

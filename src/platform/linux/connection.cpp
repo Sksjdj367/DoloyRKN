@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include <errno.h>
-#include <netinet/in.h>
 #include <libnetfilter_queue/libnetfilter_queue.h>
 #include <linux/netfilter.h>
 #include <string.h>
 #include <unistd.h>
 
 #include "util/log.hpp"
+#include "net/byte_swap.hpp"
 #include "cli/params.hpp"
 #include "core/connection.hpp"
 #include "platform/linux/netfilter_util.hpp"
-#include "net/pkt.hpp"
+#include "net/packet.hpp"
 #include "net/parse_raw_packet.hpp"
 
 #include "platform/linux/connection.hpp"
@@ -227,9 +227,9 @@ bool TrafficModifier::sendCustomBeforeOriginal(Packet* packet)
     isSendedCustom_ = true;
 
     auto ip = reinterpret_cast<uint32_t*>(
-        reinterpret_cast<ipv4_hdr*>(packet->network_hdr)->dst_ip.addr)[0];
+        reinterpret_cast<IPv4Hdr*>(packet->network_hdr)->dst_ip.addr)[0];
 
-    struct sockaddr_in addr = {AF_INET, htons(443), {ip}, 0};
+    struct sockaddr_in addr = {AF_INET, HostToNetShort(443), {ip}, 0};
 
     if (sendto(customPacketSock,
             reinterpret_cast<uint8_t*>(packet->data),

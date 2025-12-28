@@ -3,7 +3,7 @@
 #pragma once
 
 #include "cli/params.hpp"
-#include "net/pkt.hpp"
+#include "net/packet.hpp"
 
 namespace Core
 {

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include <errno.h>
-#include <netinet/in.h>
 #include <libnetfilter_queue/libnetfilter_queue.h>
 #include <linux/netfilter.h>
 
@@ -12,6 +11,7 @@
 #include "platform/linux/netfilter_util.hpp"
 
 using namespace logs;
+using namespace Net;
 
 namespace Platform
 {
@@ -26,7 +26,7 @@ bool fillPacketInfo(NetfilterPacketInfo* packetInfo, nfq_data* nfad)
         return 0;
     }
 
-    packetInfo->id = ntohl(nfqnlHdr->packet_id);
+    packetInfo->id = NetToHostLong(nfqnlHdr->packet_id);
 
     if (packetInfo->id == 0)
     {

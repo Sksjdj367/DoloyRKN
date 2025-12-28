@@ -5,7 +5,7 @@
 
 #include "util/log.hpp"
 #include "core/connection.hpp"
-#include "net/pkt.hpp"
+#include "net/packet.hpp"
 #include "net/parse_raw_packet.hpp"
 
 #include "connection.hpp"

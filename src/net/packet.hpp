@@ -15,9 +15,9 @@ struct Packet
     uint8_t* data;
     uint8_t* end;
     uint32_t data_len;
-    NETWORK_PROTOCOLS network_protocol;
+    NetworkProtocol network_protocol;
     uint8_t* network_hdr;
-    TRANSPORT_PROTOCOLS transport_protocol;
+    TransportProtocol transport_protocol;
     uint8_t* transport_hdr;
     uint8_t* payload;
 };

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "net/pkt.hpp"
+#include "net/packet.hpp"
 
 namespace Net
 {

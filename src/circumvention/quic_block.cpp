@@ -2,12 +2,14 @@
 
 #include "circumvention/quic_block.hpp"
 
-#include "net/pkt.hpp"
+#include "net/packet.hpp"
 #include "core/connection.hpp"
+
+using namespace Net;
 
 namespace Circumvention
 {
-bool isQUIC(Net::Packet* packet)
+bool isQUIC(Packet* packet)
 {
     if (!packet->payload)
     {

@@ -3,15 +3,17 @@
 #include <stdio.h>
 
 #include "util/log.hpp"
-#include "net/pkt.hpp"
+#include "net/packet.hpp"
 #include "core/connection.hpp"
 #include "circumvention/fake_packet.hpp"
 #include "circumvention/quic_block.hpp"
 
+using namespace Net;
+
 namespace Circumvention
 {
 [[nodiscard]]
-bool handlePkt(Net::Packet* packet, Core::TrafficModifier* trafficModifier)
+bool handlePkt(Packet* packet, Core::TrafficModifier* trafficModifier)
 {
     const auto params = trafficModifier->getParams();
 
