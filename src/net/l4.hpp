@@ -42,6 +42,16 @@ struct UDPHdr
     uint16_t dst_port;
     uint16_t len;
     uint16_t checksum;
+
+    uint16_t getSrcPort()
+    {
+        return NetToHostShort(src_port);
+    }
+
+    uint16_t getDstPort()
+    {
+        return NetToHostShort(dst_port);
+    }
 };
 #pragma pack(pop)
 } // namespace Net

@@ -72,10 +72,15 @@ static bool parsePayload(Packet* packet)
         return 1;
     }
 
+    if (packet->payload)
+    {
+        packet->payload_len = packet->end - packet->payload + 1;
+    }
+
     return 1;
 }
 
-bool parseRawPacket(uint8_t* rawPacket, size_t rawPacketLen, Packet* packet)
+bool parseRawPacket(uint8_t* rawPacket, size_t rawPacketLen, bool isOutbound, Packet* packet)
 {
     if (!rawPacket)
     {
@@ -90,7 +95,8 @@ bool parseRawPacket(uint8_t* rawPacket, size_t rawPacketLen, Packet* packet)
 
     packet->data = rawPacket;
     packet->data_len = rawPacketLen;
-    packet->end = packet->data + packet->data_len;
+    packet->end = packet->data + packet->data_len - 1;
+    packet->is_outbound = isOutbound;
 
     if (!parseNetworkLayer(packet))
     {

@@ -102,15 +102,18 @@ void printHelp()
     info(
         "Usage: %s [OPTIONS]\n"
         "OPTIONS:\n"
-        "  -c --fp-fake-tcp-checksum set fake checksum in fake packet tcp header\n"
-        "  -s --fp-fake-tcp-seq      set fake seq in fake packet tcp header\n"
-        "  -a --fp-fake-tcp-ack      set fake ack in fake packet tcp header\n"
-        "  -F --fp-from-hex <hex>    use custom fake packet from hex\n"
+        " -i --dr-ipv4 <ip>          set dns ipv4 (actually dns 77.88.8.8, parsing incomplete) \n"
+        " -I --dr-ipv6 <ip>          set dns ipv6 (actually ipv6 is incomplete and does not work)\n"
         "\n"
-        "  -q --block-quic           drop all quic traffic, greatly increases traffic speed "
-        "when using fake packets\n"
+        " -c --fp-fake-tcp-checksum set fake checksum in fake packet tcp header\n"
+        " -s --fp-fake-tcp-seq      set fake seq in fake packet tcp header\n"
+        " -a --fp-fake-tcp-ack      set fake ack in fake packet tcp header\n"
+        " -F --fp-from-hex <hex>    use custom fake packet from hex (incomplete)\n"
         "\n"
-        "  -h --help                 print this help and exit\n"
+        " -q --block-quic           drop all quic traffic may increase traffic speed"
+        " when using fake packets\n"
+        "\n"
+        " -h --help                 print this help and exit\n"
         "",
         Platform::name);
 }
@@ -118,6 +121,9 @@ void printHelp()
 void logParams(struct cli::Params* params)
 {
     info(
+        "Dns Redirect                  : %d\n"
+        "Dns Redirect ipv4             : %u\n"
+        "Dns Redirect ipv6             : %u\n"
         "Fake packet                   : %d\n"
         "Fake packet fake TCP checksum : %d\n"
         "Fake packet fake TCP seq      : %d\n"
@@ -126,6 +132,9 @@ void logParams(struct cli::Params* params)
         "Block QUIC                    : %d\n"
         "Show Help                     : %d\n"
         "\n",
+        params->do_dns_redirect,
+        params->dr_ipv4,
+        params->dr_ipv6,
         params->do_fake_packet,
         params->do_fp_tcp_fake_checksum,
         params->do_fp_tcp_fake_seq,
@@ -160,18 +169,18 @@ int Launcher::run()
     if (params->do_help)
     {
         printHelp();
-        return EXIT_SUCCESS;
+        return 0;
     }
 
     auto trafficModifier = createTrafficModifier(params.get());
     if (!trafficModifier)
-        return EXIT_FAILURE;
+        return 1;
 
     if (!runFilterLoop(trafficModifier))
     {
-        return EXIT_FAILURE;
+        return 1;
     }
 
-    return EXIT_SUCCESS;
+    return 0;
 }
 } // namespace Core

@@ -33,8 +33,8 @@ TrafficModifier::TrafficModifier(cli::Params* params, Core::TrafficModifierCallb
 
 TrafficModifier::~TrafficModifier()
 {
-    nfq_destroy_queue(netfilterQueueQueue_);
-    nfq_close(netfilterQueue_);
+    nfq_destroy_queue(queue_);
+    nfq_close(netfilter_);
 }
 
 constexpr int one = 1;
@@ -86,7 +86,7 @@ int cb(struct nfq_q_handle* gh, struct nfgenmsg* nfmsg, struct nfq_data* nfad, v
         return -1;
     }
 
-    if (!Net::parseRawPacket(packetInfo.data, packetInfo.data_len, &packet))
+    if (!parseRawPacket(packetInfo.data, packetInfo.data_len, nfq_get_outdev(nfad) > 0, &packet))
     {
         err("Failed to properly fill packet from packet info\n");
         return -1;
@@ -101,50 +101,51 @@ int cb(struct nfq_q_handle* gh, struct nfgenmsg* nfmsg, struct nfq_data* nfad, v
 
 bool TrafficModifier::openNetfilterQueueSystem()
 {
-    netfilterQueue_ = nfq_open();
-    if (!netfilterQueue_)
+    netfilter_ = nfq_open();
+    if (!netfilter_)
     {
         info("Failed to open netfilter");
         return 0;
     }
 
-    if (nfq_unbind_pf(netfilterQueue_, sockFamily))
+    nfnl_rcvbufsiz(nfq_nfnlh(netfilter_), 1000000);
+
+    if (nfq_unbind_pf(netfilter_, sockFamily))
     {
         err("Failed to unbind queue");
-        nfq_close(netfilterQueue_);
+        nfq_close(netfilter_);
         return 0;
     }
 
-    if (nfq_bind_pf(netfilterQueue_, sockFamily))
+    if (nfq_bind_pf(netfilter_, sockFamily))
     {
         pr_errno(errno, "Failed to bind queue");
-        nfq_close(netfilterQueue_);
+        nfq_close(netfilter_);
         return 0;
     }
 
-    netfilterQueueQueue_ =
-        nfq_create_queue(netfilterQueue_, netfilterQueueId, &cb, reinterpret_cast<void*>(this));
-    if (!netfilterQueueQueue_)
+    queue_ = nfq_create_queue(netfilter_, netfilterQueueId, &cb, reinterpret_cast<void*>(this));
+    if (!queue_)
     {
-        nfq_close(netfilterQueue_);
+        nfq_close(netfilter_);
         pr_errno(errno, "Failed to create queue");
         return 0;
     }
 
-    if (nfq_set_mode(netfilterQueueQueue_, NFQNL_COPY_PACKET, sizeof(packetBuf_)))
+    if (nfq_set_mode(queue_, NFQNL_COPY_PACKET, sizeof(packetBuf_)))
     {
         pr_errno(errno, "Failed to set queue mode");
-        nfq_destroy_queue(netfilterQueueQueue_);
-        nfq_close(netfilterQueue_);
+        nfq_destroy_queue(queue_);
+        nfq_close(netfilter_);
         return 0;
     }
 
-    if (nfq_set_queue_maxlen(netfilterQueueQueue_, 65535) == -1)
+    if (nfq_set_queue_maxlen(queue_, 65535) == -1)
     {
         pr_errno(errno, "Failed to set queue max length\n");
     }
 
-    netfilterQueueSock = nfq_fd(netfilterQueue_);
+    queueSock = nfq_fd(netfilter_);
 
     return 1;
 }
@@ -200,7 +201,7 @@ bool TrafficModifier::handlePackets()
     {
         memset(packetBuf_, 0, sizeof(packetBuf_));
 
-        auto rv = recv(netfilterQueueSock, packetBuf_, sizeof(packetBuf_), 0);
+        auto rv = recv(queueSock, packetBuf_, sizeof(packetBuf_), 0);
         if (rv == -1)
         {
             pr_errno(errno, "Could not recv packet from netfilterQueueSock");
@@ -212,7 +213,7 @@ bool TrafficModifier::handlePackets()
             isSendedCustom_ = false;
         }
 
-        if (nfq_handle_packet(netfilterQueue_, packetBuf_, static_cast<int>(rv)) != 0)
+        if (nfq_handle_packet(netfilter_, packetBuf_, static_cast<int>(rv)) != 0)
         {
             pr_errno(errno, "Error during packet handling");
             return 0;
@@ -226,8 +227,7 @@ bool TrafficModifier::sendCustomBeforeOriginal(Packet* packet)
 {
     isSendedCustom_ = true;
 
-    auto ip = reinterpret_cast<uint32_t*>(
-        reinterpret_cast<IPv4Hdr*>(packet->network_hdr)->dst_ip.addr)[0];
+    auto ip = reinterpret_cast<IPv4Hdr*>(packet->network_hdr)->dst_ip;
 
     struct sockaddr_in addr = {AF_INET, HostToNetShort(443), {ip}, 0};
 

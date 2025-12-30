@@ -13,11 +13,11 @@ namespace Platform
 class TrafficModifier final : public Core::TrafficModifier
 {
   private:
-    nfq_handle* netfilterQueue_;
-    nfq_q_handle* netfilterQueueQueue_;
+    nfq_handle* netfilter_;
+    nfq_q_handle* queue_;
     nfq_callback* pcb_;
-    int netfilterQueueSock;
-    char packetBuf_[131072];
+    int queueSock;
+    char packetBuf_[10000];
     bool isSendedCustom_;
 
     [[nodiscard]]

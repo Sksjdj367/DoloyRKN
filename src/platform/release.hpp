@@ -5,7 +5,7 @@
 namespace Platform
 {
 constexpr auto name = "DoloyRKN";
-constexpr auto version = "0.0.1";
+constexpr auto version = "0.0.2-rc2";
 constexpr auto os =
 #ifdef __linux__
     "Linux"

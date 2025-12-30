@@ -20,5 +20,12 @@ struct Packet
     TransportProtocol transport_protocol;
     uint8_t* transport_hdr;
     uint8_t* payload;
+    long int payload_len;
+    bool is_outbound;
+
+    uint16_t getL4AndPayloadLength() const
+    {
+        return end - transport_hdr + 1;
+    }
 };
 } // namespace Net

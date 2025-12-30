@@ -8,6 +8,10 @@ namespace cli
 {
 struct Params
 {
+    bool do_dns_redirect;
+    uint32_t dr_ipv4;
+    uint32_t dr_ipv6;
+
     bool do_fake_packet;
     bool do_fp_tcp_fake_checksum;
     bool do_fp_tcp_fake_seq;

@@ -22,7 +22,7 @@ TrafficModifier::TrafficModifier(cli::Params* params, Core::TrafficModifierCallb
 
 TrafficModifier::~TrafficModifier() { WinDivertClose(winDivert_); }
 
-constexpr const char* filter = "outbound and !loopback and !icmp and !icmpv6";
+constexpr const char* filter = "!loopback and !icmp and !icmpv6 and !ipv6";
 
 std::string_view getWindivertOpenErrorStr(DWORD err)
 {
@@ -92,7 +92,7 @@ bool TrafficModifier::handlePackets()
             return 0;
         }
 
-        if (!parseRawPacket(winDivertPacketBuf_, rv, &packet))
+        if (!parseRawPacket(winDivertPacketBuf_, rv, winDivertAddress_.Outbound, &packet))
         {
             err("Failed to parse packet.\n");
             return 0;

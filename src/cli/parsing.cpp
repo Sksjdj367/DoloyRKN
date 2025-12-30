@@ -18,10 +18,13 @@ struct ParsingContext
     const struct option* long_opts;
 };
 
-const char* shortOpts = const_cast<char*>("csaqFh");
+const char* shortOpts = const_cast<char*>("i:I:csaqF:h");
 
 enum class Options
 {
+    DR_IPv4 = 'i',
+    DR_IPv6 = 'I',
+
     FP_FAKE_TCP_CHECKSUM = 'c',
     FP_FAKE_TCP_SEQ = 's',
     FP_FAKE_TCP_ACK = 'a',
@@ -33,6 +36,9 @@ enum class Options
 };
 
 const struct option longOpts[]{
+    {"dr-ipv4", required_argument, nullptr, static_cast<int>(Options::DR_IPv4)},
+    {"dr-ipv6", required_argument, nullptr, static_cast<int>(Options::DR_IPv6)},
+
     {"fp-fake-tcp-checksum", no_argument, nullptr, static_cast<int>(Options::FP_FAKE_TCP_CHECKSUM)},
     {"fp-fake-tcp-seq", no_argument, nullptr, static_cast<int>(Options::FP_FAKE_TCP_SEQ)},
     {"fp-fake-tcp-ack", no_argument, nullptr, static_cast<int>(Options::FP_FAKE_TCP_ACK)},
@@ -57,6 +63,16 @@ bool parseOpt(int opt, std::unique_ptr<Params>& params)
     {
     case Options::HELP:
         params->do_help = true;
+        break;
+
+    case Options::DR_IPv4:
+        params->do_dns_redirect = true;
+        params->dr_ipv4 = 134764621;
+        break;
+
+    case Options::DR_IPv6:
+        params->do_dns_redirect = true;
+        params->dr_ipv6 = 0;
         break;
 
     case Options::FP_FAKE_TCP_CHECKSUM:

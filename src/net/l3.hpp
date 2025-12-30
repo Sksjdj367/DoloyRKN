@@ -33,8 +33,8 @@ struct IPv4Hdr
     uint8_t ttl;
     uint8_t protocol;
     uint16_t checksum;
-    IPv4 src_ip;
-    IPv4 dst_ip;
+    uint32_t src_ip;
+    uint32_t dst_ip;
 };
 #pragma pack(pop)
 
