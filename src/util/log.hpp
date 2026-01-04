@@ -5,12 +5,12 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-namespace logs
+namespace Logs
 {
-void log(const char* prefix, const char* msg, ...);
-void pr_errno(int, const char* msg, ...);
+void prLog(const char* prefix, const char* msg, ...);
+void prErrno(int, const char* msg, ...);
 
-#define info(...) log("", ##__VA_ARGS__)
-#define warn(...) log("\033[0;92mWarning\033[0m: ", ##__VA_ARGS__)
-#define err(...)  log("\033[0;91mError\033[0m: ", ##__VA_ARGS__)
+#define prInfo(...) prLog("", ##__VA_ARGS__)
+#define prWarn(...) prLog("\033[0;92mWarning\033[0m: ", ##__VA_ARGS__)
+#define prErr(...)  prLog("\033[0;91mError\033[0m: ", ##__VA_ARGS__)
 } // namespace logs

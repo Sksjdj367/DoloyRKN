@@ -5,8 +5,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "net/byte_swap.hpp"
-#include "net/l3.hpp"
+#include "net/util/byte_swap.hpp"
+#include "net/protocol/l3.hpp"
 
 namespace Net
 {

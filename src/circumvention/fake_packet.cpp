@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-#include "core/connection.hpp"
-#include "net/packet.hpp"
-#include "net/l3.hpp"
-#include "net/l4.hpp"
+#include "net/traffic_modifier/traffic_modifier.hpp"
+#include "net/protocol/packet.hpp"
+#include "net/protocol/l3.hpp"
+#include "net/protocol/l4.hpp"
 
 #include "circumvention/fake_packet.hpp"
 
@@ -11,7 +11,7 @@ using namespace Net;
 
 namespace Circumvention
 {
-void trySendFakePkt(Packet* packet, Core::TrafficModifier* interceptor)
+void trySendFakePkt(Packet* packet, TrafficModifier* trafficModifier)
 {
     if (packet->transport_protocol != TransportProtocol::TCP)
         return;
@@ -21,20 +21,20 @@ void trySendFakePkt(Packet* packet, Core::TrafficModifier* interceptor)
     auto def_seq = tcp_hdr->seq;
     auto def_ack = tcp_hdr->ack;
 
-    if (interceptor->getParams()->do_fp_tcp_fake_checksum)
+    if (trafficModifier->getParams()->do_fp_tcp_fake_checksum)
     {
-        interceptor->sendCustomBeforeOriginal(packet);
+        trafficModifier->sendCustomBeforeOriginal(packet);
         tcp_hdr->checksum = def_checksum * 2;
     }
-    if (interceptor->getParams()->do_fp_tcp_fake_seq)
+    if (trafficModifier->getParams()->do_fp_tcp_fake_seq)
         tcp_hdr->seq = def_seq * 2;
-    if (interceptor->getParams()->do_fp_tcp_fake_ack)
+    if (trafficModifier->getParams()->do_fp_tcp_fake_ack)
         tcp_hdr->ack = def_ack * 2;
 
     // Empirically established: for successful DPI bypass, packets must leave with
     // a minimum time gap, which is created by the logic for checking conditions between calls.
     // Call grouping makes circumvention ineffective.
-    interceptor->sendCustomBeforeOriginal(packet);
+    trafficModifier->sendCustomBeforeOriginal(packet);
 
     tcp_hdr->checksum = def_checksum;
     tcp_hdr->seq = def_seq;

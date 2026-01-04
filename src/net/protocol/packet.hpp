@@ -5,8 +5,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include "net/l3.hpp"
-#include "net/l4.hpp"
+#include "net/protocol/l3.hpp"
+#include "net/protocol/l4.hpp"
 
 namespace Net
 {
@@ -25,7 +25,7 @@ struct Packet
 
     uint16_t getL4AndPayloadLength() const
     {
-        return end - transport_hdr + 1;
+        return end - transport_hdr;
     }
 };
 } // namespace Net

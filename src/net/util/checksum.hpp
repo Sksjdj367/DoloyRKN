@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "net/packet.hpp"
+#include "net/protocol/packet.hpp"
 
 namespace Net
 {

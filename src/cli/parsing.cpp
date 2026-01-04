@@ -4,9 +4,13 @@
 #include <getopt.h>
 
 #include "util/log.hpp"
-
+#include "net/util/ip_format.hpp"
 #include "cli/params.hpp"
+
 #include "cli/parsing.hpp"
+
+using namespace Logs;
+using namespace Net;
 
 namespace cli
 {
@@ -29,7 +33,6 @@ enum class Options
     FP_FAKE_TCP_SEQ = 's',
     FP_FAKE_TCP_ACK = 'a',
     FP_FAKE_FROM_HEX = 'F',
-
     BLOCK_QUIC = 'q',
 
     HELP = 'H'
@@ -43,7 +46,6 @@ const struct option longOpts[]{
     {"fp-fake-tcp-seq", no_argument, nullptr, static_cast<int>(Options::FP_FAKE_TCP_SEQ)},
     {"fp-fake-tcp-ack", no_argument, nullptr, static_cast<int>(Options::FP_FAKE_TCP_ACK)},
     {"fp-from-hex", no_argument, nullptr, static_cast<int>(Options::FP_FAKE_FROM_HEX)},
-
     {"block-quic", no_argument, nullptr, static_cast<int>(Options::BLOCK_QUIC)},
 
     {"help", no_argument, nullptr, static_cast<int>(Options::HELP)},
@@ -67,12 +69,19 @@ bool parseOpt(int opt, std::unique_ptr<Params>& params)
 
     case Options::DR_IPv4:
         params->do_dns_redirect = true;
-        params->dr_ipv4 = 134764621;
+        params->dr_ipv4 = IPv4Tou32(optarg);
+        if (!params->dr_ipv4) {
+            prErr("invalid IPv4: %s\n", optarg);
+            return false;
+        }
         break;
 
     case Options::DR_IPv6:
         params->do_dns_redirect = true;
-        params->dr_ipv6 = 0;
+        if (!params->dr_ipv6) {
+            prErr("invalid IPv6: %s\n", optarg);
+            return false;
+        }
         break;
 
     case Options::FP_FAKE_TCP_CHECKSUM:
@@ -121,7 +130,7 @@ const std::unique_ptr<Params> parseArgs(int argc, char** argv)
     {
         if (!parseOpt(opt, params))
         {
-            logs::err("error during option parsing\n");
+            prErr("error during option parsing\n");
             return nullptr;
         }
     }

@@ -2,8 +2,8 @@
 
 #include "circumvention/quic_block.hpp"
 
-#include "net/packet.hpp"
-#include "core/connection.hpp"
+#include "net/protocol/packet.hpp"
+#include "net/traffic_modifier/traffic_modifier.hpp"
 
 using namespace Net;
 

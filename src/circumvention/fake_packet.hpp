@@ -2,12 +2,12 @@
 
 #pragma once
 
-#include "core/connection.hpp"
-#include "net/packet.hpp"
+#include "net/traffic_modifier/traffic_modifier.hpp"
+#include "net/protocol/packet.hpp"
 
 using namespace Net;
 
 namespace Circumvention
 {
-void trySendFakePkt(Packet* packet, Core::TrafficModifier* trafficModifier);
+void trySendFakePkt(Packet* packet, TrafficModifier* trafficModifier);
 }

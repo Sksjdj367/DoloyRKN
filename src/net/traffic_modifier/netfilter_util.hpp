@@ -6,9 +6,9 @@
 #include <linux/netfilter.h>
 
 #include "util/log.hpp"
-#include "platform/linux/connection.hpp"
+#include "net/traffic_modifier/traffic_modifier_linux.hpp"
 
-namespace Platform
+namespace Net
 {
 struct NetfilterPacketInfo
 {
@@ -21,8 +21,8 @@ struct NetfilterPacketInfo
 struct NetfilterContext
 {
     nfq_q_handle* netfilter_queue_handle;
-    TrafficModifier* trafficModifier;
-    Net::Packet* packet;
+    TrafficModifierLinux* trafficModifier;
+    Packet* packet;
     NetfilterPacketInfo* packetInfo;
 };
 
@@ -69,4 +69,4 @@ inline bool isOriginalQueuedPacket(NetfilterPacketInfo* packetInfo)
 {
     return packetInfo->mark == OriginalQueuedPacketMark;
 }
-} // namespace Platform
+} // namespace Net

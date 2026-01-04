@@ -3,19 +3,19 @@
 #include <stdio.h>
 
 #include "util/log.hpp"
-#include "net/packet.hpp"
-#include "core/connection.hpp"
+#include "net/protocol/packet.hpp"
+#include "net/traffic_modifier/traffic_modifier.hpp"
 #include "circumvention/dns.hpp"
 #include "circumvention/fake_packet.hpp"
 #include "circumvention/quic_block.hpp"
 
-using namespace logs;
+using namespace Logs;
 using namespace Net;
 
 namespace Circumvention
 {
 [[nodiscard]]
-bool handlePkt(Packet* packet, Core::TrafficModifier* trafficModifier)
+bool handlePkt(Packet* packet, TrafficModifier* trafficModifier)
 {
     if (packet->transport_protocol != TransportProtocol::TCP &&
         packet->transport_protocol != TransportProtocol::UDP)

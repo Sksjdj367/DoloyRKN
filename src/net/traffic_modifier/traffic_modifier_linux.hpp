@@ -6,18 +6,22 @@
 #include <linux/netfilter.h>
 
 #include "cli/params.hpp"
-#include "core/connection.hpp"
+#include "net/traffic_modifier/traffic_modifier.hpp"
 
-namespace Platform
+using namespace cli;
+using namespace Net;
+
+namespace Net
 {
-class TrafficModifier final : public Core::TrafficModifier
+class TrafficModifierLinux final : public TrafficModifier
 {
-  private:
+private:
     nfq_handle* netfilter_;
     nfq_q_handle* queue_;
     nfq_callback* pcb_;
     int queueSock;
     char packetBuf_[10000];
+    int customPacketSock_;
     bool isSendedCustom_;
 
     [[nodiscard]]
@@ -25,16 +29,16 @@ class TrafficModifier final : public Core::TrafficModifier
     [[nodiscard]]
     bool openCustomPacketSock();
 
-  public:
-    TrafficModifier(cli::Params* params, Core::TrafficModifierCallback cb);
-    ~TrafficModifier();
+public:
+    TrafficModifierLinux(Params* params, TrafficModifierCallback cb);
+    ~TrafficModifierLinux();
 
     [[nodiscard]]
     bool init() override;
 
-    bool handlePackets() override;
-    bool sendCustomBeforeOriginal(Net::Packet* packet) override;
+    bool handlePacket() override;
+    bool sendCustomBeforeOriginal(Packet* packet) override;
 
     bool isSendedCustom();
 };
-} // namespace Platform
+} // namespace Net

@@ -4,14 +4,17 @@
 
 #include <memory>
 
-#include "platform/connection.hpp"
 #include "cli/params.hpp"
+#include "net/traffic_modifier/traffic_modifier.hpp"
 
-namespace Core
+using namespace cli;
+using namespace Net;
+
+namespace Init
 {
 class Launcher
 {
-  public:
+public:
     Launcher(int argc, char** argv);
     virtual ~Launcher();
 
@@ -19,15 +22,15 @@ class Launcher
 
     virtual int run() = 0;
 
-  private:
+private:
     int argc_;
     char** argv_;
 
     void logProgramInfo() const;
     [[nodiscard]]
-    const std::unique_ptr<cli::Params> parseArgs();
+    const std::unique_ptr<Params> parseArgs();
     [[nodiscard]]
-    std::unique_ptr<TrafficModifier> createTrafficModifier(cli::Params* params) const;
+    std::unique_ptr<TrafficModifier> createTrafficModifier(Params* params) const;
     [[nodiscard]]
     bool runFilterLoop(std::unique_ptr<TrafficModifier>& pkt_interceptor) const;
 };

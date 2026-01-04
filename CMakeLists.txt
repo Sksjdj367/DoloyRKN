@@ -5,29 +5,50 @@ project(DoloyRKN)
 set(CMAKE_CXX_STANDARD 26)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-file(GLOB_RECURSE INIT_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/init/*)
-file(GLOB_RECURSE CORE_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/core/*.cpp)
-file(GLOB_RECURSE PACKET_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/net/*.cpp)
 file(GLOB_RECURSE CIRCUMVENTION_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/circumvention/*.cpp)
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    file(GLOB INIT_SRC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/init/main.cpp 
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/init/launcher/launcher.cpp 
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/init/launcher/launcher_linux.cpp)
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    file(GLOB INIT_SRC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/init/main.cpp 
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/init/launcher/launcher.cpp 
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/init/launcher/launcher_windows.cpp)
+endif()
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    file(GLOB_RECURSE NET_SRC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/net/protocols/* 
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/net/util/* 
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/net/traffic_modifier.cpp 
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/net/traffic_modifier_linux.cpp 
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/net/netfilter_util.cpp)
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    file(GLOB_RECURSE NET_SRC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/net/protocols/* 
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/net/util/* 
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/net/traffic_modifier.cpp 
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/net/traffic_modifier_windows.cpp)
+endif()
+
 file(GLOB_RECURSE CLI_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/cli/*.cpp)
 file(GLOB_RECURSE UTIL_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/util/*.cpp)
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    file(GLOB_RECURSE PLATFORM_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/linux/*.cpp)
-elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    file(GLOB_RECURSE PLATFORM_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/windows/*.cpp)
-    file(GLOB RESOURCES_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/windows/resource/resource.rc)
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    file(GLOB RESOURCES_SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/resources/resources.rc)
 endif()
 
 set(PROJECT_FILES
-${INIT_SRC} 
-${CORE_SRC} 
-${PACKET_SRC} 
 ${CIRCUMVENTION_SRC} 
 ${CLI_SRC} 
-${UTIL_SRC} 
+${INIT_SRC}
+${NET_SRC} 
 ${PLATFORM_SRC}
-${RESOURCES_SRC})
+${RESOURCES_SRC}
+${UTIL_SRC})
 
 add_executable(${PROJECT_NAME} ${PROJECT_FILES})
 
@@ -110,7 +131,5 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     -Wuninitialized
     -Wunknown-pragmas
     -Wuseless-cast)
-elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Werror)
 endif()
 

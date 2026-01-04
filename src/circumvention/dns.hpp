@@ -3,7 +3,7 @@
 #pragma once
 
 #include "cli/params.hpp"
-#include "net/packet.hpp"
+#include "net/protocol/packet.hpp"
 
 using namespace cli;
 using namespace Net;

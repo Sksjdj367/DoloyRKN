@@ -5,12 +5,12 @@
 
 #include "util/log.hpp"
 #include "cli/params.hpp"
-#include "net/checksum.hpp"
-#include "net/packet.hpp"
+#include "net/util/checksum.hpp"
+#include "net/protocol/packet.hpp"
 
 #include "circumvention/dns.hpp"
 
-using namespace logs;
+using namespace Logs;
 using namespace cli;
 using namespace Net;
 
@@ -83,7 +83,7 @@ void substituteDNSResponse(Packet* packet)
     auto ip = IPv4DNSAddresses[reinterpret_cast<UDPHdr*>(packet->transport_hdr)->dst_port];
     if (!ip)
     {
-        err("No cache! [%u]\n", reinterpret_cast<UDPHdr*>(packet->transport_hdr)->src_port);
+        prErr("No cache! [%u]\n", reinterpret_cast<UDPHdr*>(packet->transport_hdr)->src_port);
         return;
     }
 

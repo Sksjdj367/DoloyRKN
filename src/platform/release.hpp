@@ -5,12 +5,14 @@
 namespace Platform
 {
 constexpr auto name = "DoloyRKN";
-constexpr auto version = "0.0.2-rc2";
+constexpr auto version = "0.0.3-rc3";
 constexpr auto os =
 #ifdef __linux__
     "Linux"
 #elif defined(__WIN32) || defined(__WIN64)
     "Windows"
+#else
+#error "Unknown platform"
 #endif
     ;
 constexpr auto arch =
@@ -23,7 +25,7 @@ constexpr auto arch =
 #elif defined(__arm__)
     "ARM"
 #else
-    "Unknown arch"
+#error "Unknown arch"
 #endif
 ;
 } // namespace Platform

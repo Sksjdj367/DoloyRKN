@@ -6,18 +6,30 @@
 #include <unistd.h>
 
 #include "util/log.hpp"
-#include "platform/connection.hpp"
-#include "platform/launcher.hpp"
+
+#if defined(__linux__)
+#include "init/launcher/launcher_linux.hpp"
+using LauncherImpl = Init::LauncherLinux;
+#elif defined(__WIN32) || defined(__WIN64)
+#include "init/launcher/launcher_windows.hpp"
+using LauncherImpl = Init::LauncherWindows;
+#else
+#error "Cannot find launcher impl for targeted platform"
+#endif
+
 #include "platform/release.hpp"
 #include "cli/parsing.hpp"
-#include "net/packet.hpp"
+#include "net/protocol/packet.hpp"
 #include "circumvention/pkt_handling.hpp"
+#include "net/util/byte_swap.hpp"
 
-#include "core/launcher.hpp"
+#include "init/launcher/launcher.hpp"
 
-using namespace logs;
+using namespace Logs;
+using namespace cli;
+using namespace Net;
 
-namespace Core
+namespace Init
 {
 Launcher::Launcher(int argc, char** argv) : argc_(argc), argv_(argv) {}
 
@@ -25,12 +37,12 @@ Launcher::~Launcher() {}
 
 std::unique_ptr<Launcher> Launcher::create(int argc, char** argv)
 {
-    return std::make_unique<Platform::Launcher>(argc, argv);
+    return std::make_unique<LauncherImpl>(argc, argv);
 }
 
 void Launcher::logProgramInfo() const
 {
-    info(
+    prInfo(
         "%s v%s for %s %s: DPI Circumvention Utility\n"
         "\n",
         Platform::name,
@@ -38,21 +50,21 @@ void Launcher::logProgramInfo() const
         Platform::os,
         Platform::arch);
 
-    info("argv: {");
+    prInfo("cmd: ");
     for (int i = 0; i < argc_; i++)
     {
-        info("%s ", argv_[i]);
+        prInfo("%s ", argv_[i]);
     }
-    info("\b}\n\n");
+    prInfo("\n\n");
 }
 
 [[nodiscard]]
-const std::unique_ptr<cli::Params> Launcher::parseArgs()
+const std::unique_ptr<Params> Launcher::parseArgs()
 {
     auto params = cli::parseArgs(argc_, argv_);
     if (!params)
     {
-        err("Error during args parsing\n");
+        prErr("Error during args parsing\n");
         return nullptr;
     }
 
@@ -60,24 +72,23 @@ const std::unique_ptr<cli::Params> Launcher::parseArgs()
 }
 
 [[nodiscard]]
-std::unique_ptr<TrafficModifier> Launcher::createTrafficModifier(cli::Params* params) const
+std::unique_ptr<TrafficModifier> Launcher::createTrafficModifier(Params* params) const
 {
-    auto trafficModifier =
-        std::make_unique<Platform::TrafficModifier>(params, &Circumvention::handlePkt);
+    auto trafficModifier = TrafficModifier::create(params, &Circumvention::handlePkt);
 
     if (!trafficModifier)
     {
-        err("Failed to open traffic modifier.\n");
+        prErr("Failed to open traffic modifier.\n");
         return nullptr;
     }
 
     if (!trafficModifier->init())
     {
-        err("Failed to init packet interceptor.\n");
+        prErr("Failed to init packet interceptor.\n");
         return nullptr;
     }
 
-    info("Filter opened, circumvention is running!\n\n");
+    prInfo("Filter opened, circumvention is running!\n\n");
 
     return trafficModifier;
 }
@@ -87,9 +98,9 @@ bool Launcher::runFilterLoop(std::unique_ptr<TrafficModifier>& trafficModifier) 
 {
     while (true)
     {
-        if (!trafficModifier->handlePackets())
+        if (!trafficModifier->handlePacket())
         {
-            err("Could not handle packet\n");
+            prErr("Could not handle packet\n");
             return 0;
         }
     }
@@ -99,30 +110,30 @@ bool Launcher::runFilterLoop(std::unique_ptr<TrafficModifier>& trafficModifier) 
 
 void printHelp()
 {
-    info(
+    prInfo(
         "Usage: %s [OPTIONS]\n"
         "OPTIONS:\n"
-        " -i --dr-ipv4 <ip>          set dns ipv4 (actually dns 77.88.8.8, parsing incomplete) \n"
-        " -I --dr-ipv6 <ip>          set dns ipv6 (actually ipv6 is incomplete and does not work)\n"
+        "         --dr-ipv4 <ip> -i : redirect to DNS with specified ip\n"
+        "         --dr-ipv6 <ip> -I : set dns ipv6 (actually ipv6 is incomplete and does not\n"
+        "                             work)\n"
         "\n"
-        " -c --fp-fake-tcp-checksum set fake checksum in fake packet tcp header\n"
-        " -s --fp-fake-tcp-seq      set fake seq in fake packet tcp header\n"
-        " -a --fp-fake-tcp-ack      set fake ack in fake packet tcp header\n"
-        " -F --fp-from-hex <hex>    use custom fake packet from hex (incomplete)\n"
+        " --fp-fake-tcp-checksum -c : set fake checksum in fake packet tcp header\n"
+        "      --fp-fake-tcp-seq -s : fake seq in TCP\n"
+        "      --fp-fake-tcp-ack -a : fake ack in TCP\n"
+        "    --fp-from-hex <hex> -F : send fake hex (incomplete)\n"
+        "           --block-quic -q : drop quic traffic\n"
         "\n"
-        " -q --block-quic           drop all quic traffic may increase traffic speed"
-        " when using fake packets\n"
-        "\n"
-        " -h --help                 print this help and exit\n"
+        "                 --help -h : print this help and exit\n"
         "",
         Platform::name);
 }
 
-void logParams(struct cli::Params* params)
+void logParams(struct Params* params)
 {
-    info(
+
+    prInfo(
         "Dns Redirect                  : %d\n"
-        "Dns Redirect ipv4             : %u\n"
+        "Dns Redirect ipv4             : %u.%u.%u.%u\n"
         "Dns Redirect ipv6             : %u\n"
         "Fake packet                   : %d\n"
         "Fake packet fake TCP checksum : %d\n"
@@ -133,7 +144,12 @@ void logParams(struct cli::Params* params)
         "Show Help                     : %d\n"
         "\n",
         params->do_dns_redirect,
-        params->dr_ipv4,
+
+        (NetToHostLong(params->dr_ipv4) >> 24) & 0xFF,
+        (NetToHostLong(params->dr_ipv4) >> 16) & 0xFF,
+        (NetToHostLong(params->dr_ipv4) >> 8) & 0xFF,
+        NetToHostLong(params->dr_ipv4) & 0xFF,
+
         params->dr_ipv6,
         params->do_fake_packet,
         params->do_fp_tcp_fake_checksum,
@@ -142,18 +158,6 @@ void logParams(struct cli::Params* params)
         params->fake_from_hex != nullptr,
         params->do_block_quic,
         params->do_help);
-}
-
-[[nodiscard]]
-bool handleExitOpts(cli::Params& params)
-{
-    if (params.do_help)
-    {
-        printHelp();
-        return true;
-    }
-
-    return false;
 }
 
 int Launcher::run()
@@ -166,7 +170,7 @@ int Launcher::run()
 
     logParams(params.get());
 
-    if (params->do_help)
+    if (params->do_help || argc_ == 1)
     {
         printHelp();
         return 0;
@@ -183,4 +187,4 @@ int Launcher::run()
 
     return 0;
 }
-} // namespace Core
+} // namespace Init

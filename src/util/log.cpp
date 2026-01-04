@@ -6,9 +6,9 @@
 
 #include "util/log.hpp"
 
-namespace logs
+namespace Logs
 {
-void log(const char* prefix, const char* msg, ...)
+void prLog(const char* prefix, const char* msg, ...)
 {
     va_list args;
 
@@ -20,7 +20,7 @@ void log(const char* prefix, const char* msg, ...)
     va_end(args);
 }
 
-void pr_errno(int errno, const char* msg, ...)
+void prErrno(int errno, const char* msg, ...)
 {
     va_list args;
 

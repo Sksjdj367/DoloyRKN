@@ -5,24 +5,23 @@
 #include <linux/netfilter.h>
 
 #include "util/log.hpp"
-#include "net/l3.hpp"
-#include "net/l4.hpp"
+#include "net/protocol/l3.hpp"
+#include "net/protocol/l4.hpp"
 
-#include "platform/linux/netfilter_util.hpp"
+#include "net/traffic_modifier/netfilter_util.hpp"
 
-using namespace logs;
+using namespace Logs;
 using namespace Net;
 
-namespace Platform
+namespace Net
 {
-using namespace logs;
 [[nodiscard]]
 bool fillPacketInfo(NetfilterPacketInfo* packetInfo, nfq_data* nfad)
 {
     auto nfqnlHdr = nfq_get_msg_packet_hdr(nfad);
     if (!nfqnlHdr)
     {
-        pr_errno(errno, "Cannot get nfqnl packet header\n");
+        prErrno(errno, "Cannot get nfqnl packet header\n");
         return 0;
     }
 
@@ -30,14 +29,14 @@ bool fillPacketInfo(NetfilterPacketInfo* packetInfo, nfq_data* nfad)
 
     if (packetInfo->id == 0)
     {
-        pr_errno(errno, "Cannot get packet id (id=0)\n");
+        prErrno(errno, "Cannot get packet id (id=0)\n");
         return 0;
     }
 
     int payload_len = nfq_get_payload(nfad, &packetInfo->data);
     if (payload_len < 0)
     {
-        pr_errno(errno, "Cannot get packet content from nfad\n");
+        prErrno(errno, "Cannot get packet content from nfad\n");
         return 0;
     }
     packetInfo->data_len = static_cast<uint32_t>(payload_len);
@@ -46,4 +45,4 @@ bool fillPacketInfo(NetfilterPacketInfo* packetInfo, nfq_data* nfad)
 
     return 1;
 }
-} // namespace Platform
+} // namespace Net

@@ -4,15 +4,15 @@
 
 #include "util/log.hpp"
 
-#include "platform/windows/launcher.hpp"
+#include "init/launcher/launcher_windows.hpp"
 
-using namespace logs;
+using namespace Logs;
 
-namespace Platform
+namespace Init
 {
-Launcher::Launcher(int argc, char** argv) : Core::Launcher(argc, argv) {}
+LauncherWindows::LauncherWindows(int argc, char** argv) : Launcher(argc, argv) {}
 
-Launcher::~Launcher() {}
+LauncherWindows::~LauncherWindows() {}
 
 DWORD enableANSIColors()
 {
@@ -31,12 +31,12 @@ DWORD enableANSIColors()
     return 0;
 }
 
-int Launcher::run()
+int LauncherWindows::run()
 {
     auto res = enableANSIColors();
     if (res)
-        err("Failed to enable ANSI colors support (err=%d)\n", res);
+        prErr("Failed to enable ANSI colors support (err=%d)\n", res);
 
-    return Core::Launcher::run();
+    return Launcher::run();
 }
-} // namespace Platform
+} // namespace Init
