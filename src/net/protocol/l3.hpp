@@ -2,7 +2,8 @@
 
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
+#include <cstring>
 
 namespace Net
 {
@@ -15,6 +16,11 @@ enum class NetworkProtocol : uint8_t
 struct IPv4
 {
     uint8_t addr[4];
+
+    bool operator==(const IPv4& ip) const
+    {
+        return memcmp(addr, ip.addr, sizeof(addr)) == 0;
+    }
 };
 
 struct IPv6

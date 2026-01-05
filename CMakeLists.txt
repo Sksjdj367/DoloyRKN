@@ -88,7 +88,7 @@ endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_compile_options(${PROJECT_NAME} PRIVATE
-    -flto
+    -flto=auto
     -O3
     -fno-common
     -fdiagnostics-show-option

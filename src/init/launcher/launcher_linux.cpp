@@ -21,6 +21,7 @@ LauncherLinux::~LauncherLinux() {}
 [[nodiscard]]
 bool setupIptablesRules()
 {
+    system("sudo iptables -t mangle -F");
     if (system("sudo iptables -t mangle -A OUTPUT -j NFQUEUE --queue-num 0 --queue-bypass &&"
                "sudo iptables -t mangle -A INPUT -j NFQUEUE --queue-num 0 --queue-bypass") != 0)
     {

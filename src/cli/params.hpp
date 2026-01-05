@@ -2,7 +2,11 @@
 
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
+
+#include "net/protocol/l3.hpp"
+
+using namespace Net;
 
 namespace cli
 {
@@ -10,7 +14,7 @@ struct Params
 {
     bool do_dns_redirect;
     uint32_t dr_ipv4;
-    uint32_t dr_ipv6;
+    IPv6 dr_ipv6;
 
     bool do_fake_packet;
     bool do_fp_tcp_fake_checksum;

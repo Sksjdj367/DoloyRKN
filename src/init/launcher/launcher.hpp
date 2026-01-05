@@ -34,4 +34,4 @@ private:
     [[nodiscard]]
     bool runFilterLoop(std::unique_ptr<TrafficModifier>& pkt_interceptor) const;
 };
-} // namespace Core
+} // namespace Init

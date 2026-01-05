@@ -12,6 +12,6 @@ namespace Circumvention
 {
 bool isDNSRequest(const Packet* packet);
 bool isDNSResponse(const Packet* packet);
-void substituteDNSRequest(const Params* params, Packet* packet);
-void substituteDNSResponse(Packet* packet);
+void handleDNSRequest(const Params* params, Packet* packet);
+void handleDNSResponse(Packet* packet);
 } // namespace Circumvention

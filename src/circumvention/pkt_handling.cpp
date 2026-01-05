@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-#include <stdio.h>
+#include <cstdio>
+#include <chrono>
 
 #include "util/log.hpp"
 #include "net/protocol/packet.hpp"
@@ -28,26 +29,18 @@ bool handlePkt(Packet* packet, TrafficModifier* trafficModifier)
     if (packet->is_outbound)
     {
         if (params->do_block_quic && isQUIC(packet))
-        {
             return false;
-        }
 
         if (params->do_dns_redirect && isDNSRequest(packet))
-        {
-            substituteDNSRequest(params, packet);
-        }
+            handleDNSRequest(params, packet);
 
         if (params->do_fake_packet)
-        {
             trySendFakePkt(packet, trafficModifier);
-        }
     }
     else
     {
         if (params->do_dns_redirect && isDNSResponse(packet))
-        {
-            substituteDNSResponse(packet);
-        }
+            handleDNSResponse(packet);
     }
 
     return true;

@@ -5,6 +5,7 @@
 #include <linux/netfilter.h>
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #include "util/log.hpp"
 #include "net/util/byte_swap.hpp"
@@ -107,7 +108,7 @@ bool TrafficModifierLinux::openNetfilterQueueSystem()
         return 0;
     }
 
-    nfnl_rcvbufsiz(nfq_nfnlh(netfilter_), 1000000);
+    nfnl_rcvbufsiz(nfq_nfnlh(netfilter_), 800000);
 
     if (nfq_unbind_pf(netfilter_, sockFamily))
     {
@@ -139,7 +140,7 @@ bool TrafficModifierLinux::openNetfilterQueueSystem()
         return 0;
     }
 
-    if (nfq_set_queue_maxlen(queue_, 65535) == -1)
+    if (nfq_set_queue_maxlen(queue_, 24600) == -1)
     {
         prErrno(errno, "Failed to set queue max length\n");
     }
@@ -155,6 +156,12 @@ bool TrafficModifierLinux::openCustomPacketSock()
     if (customPacketSock_ == -1)
     {
         prErrno(errno, "Cannot open socket for sending custom packets");
+        return 0;
+    }
+
+    if (fcntl(customPacketSock_, F_SETFL, O_NONBLOCK) == -1)
+    {
+        prErrno(errno, "Cannot set socket option O_NONBLOCK");
         return 0;
     }
 
@@ -231,9 +238,10 @@ bool TrafficModifierLinux::sendCustomBeforeOriginal(Packet* packet)
             sizeof(addr)) == -1)
     {
         prErrno(errno, "Cannot send packet\n");
+        return 0;
     }
 
-    return 0;
+    return 1;
 }
 
 bool TrafficModifierLinux::isSendedCustom() { return isSendedCustom_; }

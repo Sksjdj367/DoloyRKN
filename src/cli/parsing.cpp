@@ -14,17 +14,11 @@ using namespace Net;
 
 namespace cli
 {
-struct ParsingContext
+namespace
 {
-    int argc;
-    char** argv;
-    const char* short_opts;
-    const struct option* long_opts;
-};
+constexpr char shortOpts[] = "i:I:csaqF:h";
 
-const char* shortOpts = const_cast<char*>("i:I:csaqF:h");
-
-enum class Options
+enum class Options : uint8_t
 {
     DR_IPv4 = 'i',
     DR_IPv6 = 'I',
@@ -35,7 +29,7 @@ enum class Options
     FP_FAKE_FROM_HEX = 'F',
     BLOCK_QUIC = 'q',
 
-    HELP = 'H'
+    HELP = 'h'
 };
 
 const struct option longOpts[]{
@@ -53,12 +47,6 @@ const struct option longOpts[]{
     {nullptr, no_argument, nullptr, 0}};
 
 [[nodiscard]]
-int getOpt(struct ParsingContext* ctx)
-{
-    return getopt_long(ctx->argc, ctx->argv, ctx->short_opts, ctx->long_opts, nullptr);
-}
-
-[[nodiscard]]
 bool parseOpt(int opt, std::unique_ptr<Params>& params)
 {
     switch (static_cast<Options>(opt))
@@ -70,18 +58,17 @@ bool parseOpt(int opt, std::unique_ptr<Params>& params)
     case Options::DR_IPv4:
         params->do_dns_redirect = true;
         params->dr_ipv4 = IPv4Tou32(optarg);
-        if (!params->dr_ipv4) {
+        if (!params->dr_ipv4)
+        {
             prErr("invalid IPv4: %s\n", optarg);
             return false;
         }
         break;
 
     case Options::DR_IPv6:
+        // Parsing incompleted
         params->do_dns_redirect = true;
-        if (!params->dr_ipv6) {
-            prErr("invalid IPv6: %s\n", optarg);
-            return false;
-        }
+        params->dr_ipv6 = {0x2a02, 0x06b8, 0x0000, 0x0000, 0x0000, 0x0000, 0xfeed, 0x00ff};
         break;
 
     case Options::FP_FAKE_TCP_CHECKSUM:
@@ -114,6 +101,7 @@ bool parseOpt(int opt, std::unique_ptr<Params>& params)
 
     return 1;
 }
+} // namespace
 
 [[nodiscard]]
 const std::unique_ptr<Params> parseArgs(int argc, char** argv)
@@ -124,13 +112,10 @@ const std::unique_ptr<Params> parseArgs(int argc, char** argv)
 
     int opt;
 
-    ParsingContext parsingContext = {argc, argv, shortOpts, longOpts};
-
-    while ((opt = getOpt(&parsingContext)) != -1)
+    while ((opt = getopt_long(argc, argv, shortOpts, longOpts, nullptr)) != -1)
     {
         if (!parseOpt(opt, params))
         {
-            prErr("error during option parsing\n");
             return nullptr;
         }
     }

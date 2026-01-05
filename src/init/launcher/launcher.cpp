@@ -1,11 +1,17 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+#include <string>
 #include <errno.h>
 #include <memory>
-#include <stdio.h>
 #include <unistd.h>
 
+#include "platform/release.hpp"
 #include "util/log.hpp"
+#include "cli/parsing.hpp"
+#include "circumvention/pkt_handling.hpp"
+#include "net/protocol/packet.hpp"
+#include "net/util/byte_swap.hpp"
+#include "net/util/ip_format.hpp"
 
 #if defined(__linux__)
 #include "init/launcher/launcher_linux.hpp"
@@ -14,14 +20,8 @@ using LauncherImpl = Init::LauncherLinux;
 #include "init/launcher/launcher_windows.hpp"
 using LauncherImpl = Init::LauncherWindows;
 #else
-#error "Cannot find launcher impl for targeted platform"
+#error "Cannot find launcher impl for targeted platform."
 #endif
-
-#include "platform/release.hpp"
-#include "cli/parsing.hpp"
-#include "net/protocol/packet.hpp"
-#include "circumvention/pkt_handling.hpp"
-#include "net/util/byte_swap.hpp"
 
 #include "init/launcher/launcher.hpp"
 
@@ -128,13 +128,12 @@ void printHelp()
         Platform::name);
 }
 
-void logParams(struct Params* params)
+void logParams(Params* params)
 {
-
     prInfo(
-        "Dns Redirect                  : %d\n"
-        "Dns Redirect ipv4             : %u.%u.%u.%u\n"
-        "Dns Redirect ipv6             : %u\n"
+        "DNS Redirect                  : %d\n"
+        "DNS Redirect ipv4             : %s\n"
+        "DNS Redirect ipv6             : %s\n"
         "Fake packet                   : %d\n"
         "Fake packet fake TCP checksum : %d\n"
         "Fake packet fake TCP seq      : %d\n"
@@ -144,13 +143,8 @@ void logParams(struct Params* params)
         "Show Help                     : %d\n"
         "\n",
         params->do_dns_redirect,
-
-        (NetToHostLong(params->dr_ipv4) >> 24) & 0xFF,
-        (NetToHostLong(params->dr_ipv4) >> 16) & 0xFF,
-        (NetToHostLong(params->dr_ipv4) >> 8) & 0xFF,
-        NetToHostLong(params->dr_ipv4) & 0xFF,
-
-        params->dr_ipv6,
+        u32ToIPv4(params->dr_ipv4).c_str(),
+        IPv6ToStr(params->dr_ipv6).c_str(),
         params->do_fake_packet,
         params->do_fp_tcp_fake_checksum,
         params->do_fp_tcp_fake_seq,

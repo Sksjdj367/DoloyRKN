@@ -4,12 +4,14 @@
 
 namespace Net
 {
-void calcL3Checksum(uint8_t* raw_ipv4_hdr)
+namespace
 {
-    auto ipv4_hdr = reinterpret_cast<IPv4Hdr*>(raw_ipv4_hdr);
+void calcL3Checksum(IPv4Hdr* ipv4_hdr)
+{
     ipv4_hdr->checksum = 0;
 
     uint32_t checksum{};
+
     for (auto i = 0u; i < (sizeof(IPv4Hdr) / 2); i++)
         checksum += reinterpret_cast<uint16_t*>(ipv4_hdr)[i];
 
@@ -21,18 +23,18 @@ void calcL3Checksum(uint8_t* raw_ipv4_hdr)
 
 void calcL4Checksum(Packet* packet)
 {
-    uint16_t* l4_checksum;
-    
+    uint16_t* pchecksum;
+
     if (packet->transport_protocol == TransportProtocol::TCP)
-        l4_checksum = &reinterpret_cast<TCPHdr*>(packet->transport_hdr)->checksum;
+        pchecksum = &reinterpret_cast<TCPHdr*>(packet->transport_hdr)->checksum;
     else if (packet->transport_protocol == TransportProtocol::UDP)
-        l4_checksum = &reinterpret_cast<UDPHdr*>(packet->transport_hdr)->checksum;
+        pchecksum = &reinterpret_cast<UDPHdr*>(packet->transport_hdr)->checksum;
     else
     {
         return;
     }
 
-    *l4_checksum = 0;
+    *pchecksum = 0;
 
     uint32_t checksum{};
 
@@ -59,13 +61,14 @@ void calcL4Checksum(Packet* packet)
         checksum = 0xFFFF;
     }
 
-    *l4_checksum = checksum;
+    *pchecksum = checksum;
 }
+} // namespace
 
 void calcChecksum(Packet* packet)
 {
     if (packet->network_protocol == NetworkProtocol::IPv4)
-        calcL3Checksum(packet->network_hdr);
+        calcL3Checksum(reinterpret_cast<IPv4Hdr*>(packet->network_hdr));
 
     calcL4Checksum(packet);
 }

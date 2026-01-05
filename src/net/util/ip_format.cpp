@@ -1,7 +1,9 @@
-#include <stdint.h>
-#include <stddef.h>
-#include <ctype.h>
-#include <stdlib.h>
+#include <format>
+#include <cstdint>
+#include <cstddef>
+#include <cctype>
+#include <cstdlib>
+#include <string>
 
 #include "net/util/byte_swap.hpp"
 #include "util/log.hpp"
@@ -49,9 +51,32 @@ uint32_t IPv4Tou32(const char* ip_str)
         return 0;
 
     result = (result << 8) | octet;
-    
+
     return HostToNetLong(result);
 }
 
-char* u32ToIPv4(const uint32_t ip_u32) { return nullptr; }
+std::string u32ToIPv4(const uint32_t ip)
+{
+    return std::format("{}.{}.{}.{}",
+        (NetToHostLong(ip) >> 24) & 0xFF,
+        (NetToHostLong(ip) >> 16) & 0xFF,
+        (NetToHostLong(ip) >> 8) & 0xFF,
+        NetToHostLong(ip) & 0xFF);
+}
+
+/**
+ * Incomplete and returns incompleted ip
+*/
+std::string IPv6ToStr(const IPv6& ip)
+{
+    return std::format("{:x}.{:x}.{:x}.{:x}.{:x}.{:x}.{:x}.{:x}",
+        ip.addr[0],
+        ip.addr[1],
+        ip.addr[2],
+        ip.addr[3],
+        ip.addr[4],
+        ip.addr[5],
+        ip.addr[6],
+        ip.addr[7]);
+}
 } // namespace Net
