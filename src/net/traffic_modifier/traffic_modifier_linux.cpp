@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-#include <errno.h>
+#include <system_error>
+#include <cerrno>
 #include <libnetfilter_queue/libnetfilter_queue.h>
 #include <linux/netfilter.h>
-#include <string.h>
+#include <cstring>
 #include <unistd.h>
 #include <fcntl.h>
 
@@ -24,18 +25,6 @@ namespace Net
 {
 constexpr int sockFamily = AF_INET;
 constexpr int netfilterQueueId = 0;
-
-TrafficModifierLinux::TrafficModifierLinux(Params* params, TrafficModifierCallback cb)
-    : TrafficModifier(params, cb)
-{
-}
-
-TrafficModifierLinux::~TrafficModifierLinux()
-{
-    close(customPacketSock_);
-    nfq_destroy_queue(queue_);
-    nfq_close(netfilter_);
-}
 
 constexpr int one = 1;
 constexpr int priority = 6;
@@ -62,7 +51,7 @@ void handleInputPacket(NetfilterContext* context)
     }
 }
 
-int cb(struct nfq_q_handle* gh, struct nfgenmsg* nfmsg, struct nfq_data* nfad, void* data)
+int netfilter_cb(struct nfq_q_handle* gh, struct nfgenmsg* nfmsg, struct nfq_data* nfad, void* data)
 {
     NetfilterPacketInfo packetInfo;
     Packet packet;
@@ -99,106 +88,62 @@ int cb(struct nfq_q_handle* gh, struct nfgenmsg* nfmsg, struct nfq_data* nfad, v
     return 0;
 }
 
-bool TrafficModifierLinux::openNetfilterQueueSystem()
+void throw_sys_err(const std::string& msg)
+{
+    throw std::system_error(errno, std::generic_category(), msg);
+}
+
+TrafficModifierLinux::TrafficModifierLinux(Params* params, TrafficModifierCallback cb)
+    : TrafficModifier(params, cb)
 {
     netfilter_ = nfq_open();
     if (!netfilter_)
-    {
-        prInfo("Failed to open netfilter");
-        return 0;
-    }
+        throw_sys_err("Failed to open netfilter");
 
     nfnl_rcvbufsiz(nfq_nfnlh(netfilter_), 800000);
 
-    if (nfq_unbind_pf(netfilter_, sockFamily))
-    {
-        prErr("Failed to unbind queue");
-        nfq_close(netfilter_);
-        return 0;
-    }
+    if (nfq_unbind_pf(netfilter_, sockFamily) != 0)
+        throw_sys_err("Failed to unbind queue");
 
-    if (nfq_bind_pf(netfilter_, sockFamily))
-    {
-        prErrno(errno, "Failed to bind queue");
-        nfq_close(netfilter_);
-        return 0;
-    }
+    if (nfq_bind_pf(netfilter_, sockFamily) != 0)
+        throw_sys_err("Failed to open netfilter");
 
-    queue_ = nfq_create_queue(netfilter_, netfilterQueueId, &cb, reinterpret_cast<void*>(this));
+    queue_ = nfq_create_queue(
+        netfilter_, netfilterQueueId, &netfilter_cb, reinterpret_cast<void*>(this));
     if (!queue_)
-    {
-        nfq_close(netfilter_);
-        prErrno(errno, "Failed to create queue");
-        return 0;
-    }
+        throw_sys_err("Failed to create queue");
 
     if (nfq_set_mode(queue_, NFQNL_COPY_PACKET, sizeof(packetBuf_)))
-    {
-        prErrno(errno, "Failed to set queue mode");
-        nfq_destroy_queue(queue_);
-        nfq_close(netfilter_);
-        return 0;
-    }
+        throw_sys_err("Failed to set queue mode");
 
     if (nfq_set_queue_maxlen(queue_, 24600) == -1)
-    {
-        prErrno(errno, "Failed to set queue max length\n");
-    }
+        throw_sys_err("Failed to set queue max length\n");
 
     queueSock = nfq_fd(netfilter_);
 
-    return 1;
-}
-
-bool TrafficModifierLinux::openCustomPacketSock()
-{
     customPacketSock_ = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
     if (customPacketSock_ == -1)
-    {
-        prErrno(errno, "Cannot open socket for sending custom packets");
-        return 0;
-    }
+        throw_sys_err("Cannot open socket for sending custom packets");
 
     if (fcntl(customPacketSock_, F_SETFL, O_NONBLOCK) == -1)
-    {
-        prErrno(errno, "Cannot set socket option O_NONBLOCK");
-        return 0;
-    }
+        throw_sys_err("Cannot set socket option O_NONBLOCK");
 
     if (setsockopt(customPacketSock_, IPPROTO_IP, IP_HDRINCL, &one, sizeof(one)) == -1)
-    {
-        prErrno(errno, "Cannot set socket option IP_HDRINCL");
-        close(customPacketSock_);
-        return 0;
-    }
+        throw_sys_err("Cannot set socket option IP_HDRINCL");
 
     if (setsockopt(customPacketSock_, SOL_SOCKET, SO_PRIORITY, &priority, sizeof(priority)) == -1)
-    {
-        prErrno(errno, "Cannot set socket option SO_PRIORITY");
-        close(customPacketSock_);
-        return 0;
-    }
+        throw_sys_err("Cannot set socket option SO_PRIORITY");
 
     if (setsockopt(customPacketSock_, SOL_SOCKET, SO_MARK, &CustomPacketMark, sizeof(priority)) ==
         -1)
-    {
-        prErrno(errno, "Cannot set socket option SO_MARK");
-        close(customPacketSock_);
-        return 0;
-    }
-
-    return 1;
+        throw_sys_err("Cannot set socket option SO_MARK");
 }
 
-bool TrafficModifierLinux::init()
+TrafficModifierLinux::~TrafficModifierLinux()
 {
-    if (!openNetfilterQueueSystem())
-        return 0;
-
-    if (!openCustomPacketSock())
-        return 0;
-
-    return 1;
+    close(customPacketSock_);
+    nfq_destroy_queue(queue_);
+    nfq_close(netfilter_);
 }
 
 bool TrafficModifierLinux::handlePacket()

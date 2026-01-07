@@ -19,9 +19,6 @@ public:
     ~TrafficModifierWindows();
 
     [[nodiscard]]
-    bool init() override;
-
-    [[nodiscard]]
     bool fillPacket(uint8_t* rawPacket, uint32_t rawPacketLen, Packet* packet);
     bool handlePacket(Packet* packet);
 

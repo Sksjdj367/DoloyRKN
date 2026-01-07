@@ -33,9 +33,6 @@ public:
     TrafficModifierLinux(Params* params, TrafficModifierCallback cb);
     ~TrafficModifierLinux();
 
-    [[nodiscard]]
-    bool init() override;
-
     bool handlePacket() override;
     bool sendCustomBeforeOriginal(Packet* packet) override;
 

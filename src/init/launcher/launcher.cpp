@@ -44,6 +44,8 @@ void Launcher::logProgramInfo() const
 {
     prInfo(
         "%s v%s for %s %s: DPI Circumvention Utility\n"
+        "Source: https://github.com/Sksjdj367/DoloyRKN\n"
+        "Report issues on: https://github.com/Sksjdj367/DoloyRKN/issues\n"
         "\n",
         Platform::name,
         Platform::version,
@@ -75,16 +77,9 @@ const std::unique_ptr<Params> Launcher::parseArgs()
 std::unique_ptr<TrafficModifier> Launcher::createTrafficModifier(Params* params) const
 {
     auto trafficModifier = TrafficModifier::create(params, &Circumvention::handlePkt);
-
     if (!trafficModifier)
     {
         prErr("Failed to open traffic modifier.\n");
-        return nullptr;
-    }
-
-    if (!trafficModifier->init())
-    {
-        prErr("Failed to init packet interceptor.\n");
         return nullptr;
     }
 
@@ -154,6 +149,18 @@ void logParams(Params* params)
         params->do_help);
 }
 
+void setDefaultParams(Params* params)
+{
+    // params->do_dns_redirect = true;
+    // params->dr_ipv4 = 0;
+
+    params->do_fake_packet = true;
+    params->do_fp_tcp_fake_checksum = true;
+    params->do_fp_tcp_fake_seq = true;
+    params->do_fp_tcp_fake_ack = true;
+    params->do_block_quic = true;
+}
+
 int Launcher::run()
 {
     logProgramInfo();
@@ -162,13 +169,16 @@ int Launcher::run()
     if (!params)
         return 1;
 
-    logParams(params.get());
-
-    if (params->do_help || argc_ == 1)
+    if (params->do_help)
     {
         printHelp();
         return 0;
     }
+
+    if (argc_ == 1)
+        setDefaultParams(params.get());
+
+    logParams(params.get());
 
     auto trafficModifier = createTrafficModifier(params.get());
     if (!trafficModifier)

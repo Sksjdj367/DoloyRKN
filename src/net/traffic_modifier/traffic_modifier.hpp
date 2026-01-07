@@ -23,9 +23,6 @@ public:
     static std::unique_ptr<TrafficModifier> create(
         Params* params, TrafficModifierCallback callback);
 
-    [[nodiscard]]
-    virtual bool init() = 0;
-
     virtual bool handlePacket() = 0;
     virtual bool sendCustomBeforeOriginal(Packet* packet) = 0;
 

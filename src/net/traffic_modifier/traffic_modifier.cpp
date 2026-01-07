@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+#include <system_error>
+
+#include "util/log.hpp"
 #include "cli/params.hpp"
 
 #if defined(__linux__)
@@ -14,6 +17,7 @@ using TrafficModifierImpl = Net::TrafficModifierWindows;
 
 #include "net/traffic_modifier/traffic_modifier.hpp"
 
+using namespace Logs;
 using namespace cli;
 using TrafficModifierCallback = TrafficModifier::TrafficModifierCallback;
 
@@ -27,7 +31,16 @@ TrafficModifier::TrafficModifier(Params* params, TrafficModifierCallback cb)
 std::unique_ptr<TrafficModifier> TrafficModifier::create(
     Params* params, TrafficModifierCallback callback)
 {
-    return std::make_unique<TrafficModifierImpl>(params, callback);
+    try
+    {
+        auto trafficModifier = std::make_unique<TrafficModifierImpl>(params, callback);
+        return trafficModifier;
+    }
+    catch (const std::system_error& e)
+    {
+        prErr("Cannot create TrafficModifier: %s\n", e.what());
+        return nullptr;
+    }
 }
 
 const Params* TrafficModifier::getParams() const { return params_; }

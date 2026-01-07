@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+#include <system_error>
 #include <string>
 
 #include "util/log.hpp"
@@ -17,15 +18,6 @@ using namespace Net;
 
 namespace Net
 {
-TrafficModifierWindows::TrafficModifierWindows(Params* params, TrafficModifierCallback cb)
-    : TrafficModifier(params, cb)
-{
-}
-
-TrafficModifierWindows::~TrafficModifierWindows() { WinDivertClose(winDivert_); }
-
-constexpr const char* filter = "!loopback and !icmp and !icmpv6 and !ipv6";
-
 std::string_view getWinDivertOpenErrorStr(DWORD err)
 {
     switch (err)
@@ -51,29 +43,23 @@ std::string_view getWinDivertOpenErrorStr(DWORD err)
     }
 }
 
-[[nodiscard]]
-bool TrafficModifierWindows::init()
+constexpr const char* filter = "!loopback and !icmp and !icmpv6 and !ipv6";
+
+TrafficModifierWindows::TrafficModifierWindows(Params* params, TrafficModifierCallback cb)
+    : TrafficModifier(params, cb)
 {
     winDivert_ = WinDivertOpen(filter, WINDIVERT_LAYER_NETWORK, WINDIVERT_PRIORITY_HIGHEST, 0);
     if (winDivert_ == INVALID_HANDLE_VALUE)
-    {
-        auto error = GetLastError();
-        auto errStr = getWinDivertOpenErrorStr(error);
-
-        prErr("Could not open WinDivert (error: %d), %s\n", error, errStr);
-
-        return false;
-    }
-
-    return true;
+        throw std::system_error(getWinDivertOpenErrorStr(GetLastError()));
 }
+
+TrafficModifierWindows::~TrafficModifierWindows() { WinDivertClose(winDivert_); }
 
 bool TrafficModifierWindows::handlePacket(Packet* packet)
 {
     if (getCallback()(packet, this))
-    {
         WinDivertSend(winDivert_, packet->data, packet->data_len, 0, &winDivertAddress_);
-    }
+
     return 1;
 }
 
@@ -98,6 +84,7 @@ bool TrafficModifierWindows::handlePacket()
     if (!handlePacket(&packet))
     {
         prErr("Could not handle packet");
+        return 0;
     }
 
     return 1;
@@ -107,7 +94,7 @@ bool TrafficModifierWindows::sendCustomBeforeOriginal(Packet* packet)
 {
     if (!WinDivertSend(winDivert_, packet->data, packet->data_len, 0, &winDivertAddress_))
     {
-        prInfo("Failed to send custom!\n");
+        prInfo("Failed to send custom\n");
         return false;
     }
 
